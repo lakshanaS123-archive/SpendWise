@@ -1,0 +1,139 @@
+
+{% extends "base.html" %}
+
+{% block title %}Budgets | SpendWise{% endblock %}
+
+{% block content %}
+<section class="budget-page">
+
+    <div class="budget-heading">
+        <p class="eyebrow">PLAN YOUR SPENDING</p>
+        <h1>Monthly budgets</h1>
+        <p>Set a limit and keep your spending under control.</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="success-message">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <div class="budget-layout">
+
+        <!-- Create or update budget -->
+        <section class="budget-form-card">
+            <h2>Create or update a budget</h2>
+            <p class="muted">
+                Saving an existing month and year updates its limit.
+            </p>
+
+            <form method="post" class="budget-form">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                {% for error in form.non_field_errors %}
+                    <p class="error-message">{{ error }}</p>
+                {% endfor %}
+
+                <button type="submit" class="primary-button">
+                    Save budget
+                </button>
+            </form>
+        </section>
+
+        <!-- Saved budgets -->
+        <section class="budget-list">
+            <h2>Your saved budgets</h2>
+
+            {% if budget_items %}
+                {% for item in budget_items %}
+                    <article class="budget-card">
+
+                        <div class="budget-card-heading">
+                            <div>
+                                <h3>
+                                    {{ item.budget.get_month_display }}
+                                    {{ item.budget.year }}
+                                </h3>
+
+                                <p class="muted">
+                                    Spending limit:
+                                    ₹{{ item.budget.limit|floatformat:2 }}
+                                </p>
+                            </div>
+
+                            {% if item.status == "Over budget" %}
+                                <span class="budget-status status-over">
+                                    Over budget
+                                </span>
+                            {% elif item.status == "Almost at limit" %}
+                                <span class="budget-status status-warning">
+                                    Almost at limit
+                                </span>
+                            {% else %}
+                                <span class="budget-status status-good">
+                                    On track
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="budget-numbers">
+                            <span>
+                                Spent: ₹{{ item.spent|floatformat:2 }}
+                            </span>
+                            <span>{{ item.percentage }}%</span>
+                        </div>
+
+                        <div
+                            class="budget-progress"
+                            role="progressbar"
+                            aria-label="Budget spending progress"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="{{ item.progress }}"
+                        >
+                            <div
+                                class="budget-progress-fill {% if item.status == 'Over budget' %}progress-over{% elif item.status == 'Almost at limit' %}progress-warning{% endif %}"
+                                data-progress="{{ item.progress }}"
+                            ></div>
+                        </div>
+
+                        {% if item.remaining < 0 %}
+                            <p class="budget-message expense-text">
+                                You exceeded your limit by
+                                ₹{{ item.remaining|stringformat:"s"|cut:"-" }}.
+                            </p>
+                        {% else %}
+                            <p class="budget-message">
+                                ₹{{ item.remaining|floatformat:2 }} remaining
+                            </p>
+                        {% endif %}
+
+                    </article>
+                {% endfor %}
+            {% else %}
+                <div class="budget-empty">
+                    <h3>No budgets yet</h3>
+                    <p>
+                        Create your first monthly budget using the form.
+                    </p>
+                </div>
+            {% endif %}
+
+        </section>
+    </div>
+</section>
+{% endblock %}

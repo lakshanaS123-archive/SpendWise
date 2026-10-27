@@ -1,0 +1,160 @@
+
+{% extends "base.html" %}
+
+{% block title %}Transactions | SpendWise{% endblock %}
+
+{% block content %}
+<section class="transactions-section">
+
+    <div class="section-title-row">
+        <div>
+            <p class="eyebrow">YOUR MONEY ACTIVITY</p>
+            <h1>Your transactions</h1>
+        </div>
+
+        <a href="{% url 'add_transaction' %}" class="primary-button">
+            + Add transaction
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="success-message">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="get" class="filter-form">
+        <input
+            type="search"
+            name="q"
+            placeholder="Search description or category"
+            value="{{ search }}"
+        >
+
+        <select name="type">
+            <option value="">All types</option>
+            <option value="INCOME"
+                {% if selected_type == "INCOME" %}selected{% endif %}>
+                Income
+            </option>
+            <option value="EXPENSE"
+                {% if selected_type == "EXPENSE" %}selected{% endif %}>
+                Expense
+            </option>
+        </select>
+
+        <select name="category">
+            <option value="">All categories</option>
+            {% for value, label in categories %}
+                <option value="{{ value }}"
+                    {% if selected_category == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>
+            From
+            <input type="date" name="start_date"
+                   value="{{ start_date }}">
+        </label>
+
+        <label>
+            To
+            <input type="date" name="end_date"
+                   value="{{ end_date }}">
+        </label>
+
+        <button type="submit" class="primary-button">
+            Apply filters
+        </button>
+
+        <a href="{% url 'transaction_list' %}" class="clear-filter">
+            Clear
+        </a>
+    </form>
+
+    {% if transactions %}
+        <div class="table-wrapper">
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Receipt</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td>{{ transaction.category }}</td>
+                        <td>{{ transaction.description|default:"—" }}</td>
+                        <td>₹{{ transaction.amount|floatformat:2 }}</td>
+
+                        <td>
+                            {% if transaction.receipt %}
+                                <a href="{{ transaction.receipt.url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    View receipt
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td class="transaction-actions">
+                            <a href="{% url 'edit_transaction' transaction.pk %}">
+                                Edit
+                            </a>
+
+                            <a href="{% url 'delete_transaction' transaction.pk %}">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?q={{ search|urlencode }}&type={{ selected_type|urlencode }}&category={{ selected_category|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page=1">
+                    First
+                </a>
+                <a href="?q={{ search|urlencode }}&type={{ selected_type|urlencode }}&category={{ selected_category|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <span>
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?q={{ search|urlencode }}&type={{ selected_type|urlencode }}&category={{ selected_category|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+                <a href="?q={{ search|urlencode }}&type={{ selected_type|urlencode }}&category={{ selected_category|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page={{ page_obj.paginator.num_pages }}">
+                    Last
+                </a>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <div class="empty-state">
+            <h3>No transactions found</h3>
+            <p>Try changing your filters or add a transaction.</p>
+        </div>
+    {% endif %}
+
+</section>
+{% endblock %}

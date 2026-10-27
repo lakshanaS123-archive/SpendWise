@@ -1,0 +1,195 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SpendWise{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+
+    <div class="dashboard-heading">
+        <div>
+            <p class="eyebrow">YOUR FINANCIAL OVERVIEW</p>
+            <h1>Welcome back, {{ request.user.username }}!</h1>
+            <p>Here's how your money is looking.</p>
+        </div>
+
+        <a href="{% url 'add_transaction' %}"
+           class="primary-button">
+            + Add transaction
+        </a>
+    </div>
+
+    <!-- Financial summary cards -->
+    <div class="stats-grid">
+        <article class="stat-card balance-card-light">
+            <p>Total balance</p>
+            <h2>₹{{ balance|floatformat:2 }}</h2>
+            <span>Income minus expenses</span>
+        </article>
+
+        <article class="stat-card">
+            <p>Total income</p>
+            <h2 class="income-text">
+                ₹{{ total_income|floatformat:2 }}
+            </h2>
+            <span>All recorded income</span>
+        </article>
+
+        <article class="stat-card">
+            <p>Total expenses</p>
+            <h2 class="expense-text">
+                ₹{{ total_expenses|floatformat:2 }}
+            </h2>
+            <span>All recorded expenses</span>
+        </article>
+    </div>
+
+    <!-- Current month summary -->
+    <section class="monthly-section">
+        <h2>{{ current_month }} summary</h2>
+
+        <div class="monthly-grid">
+            <div>
+                <p>Income this month</p>
+                <strong class="income-text">
+                    ₹{{ monthly_income|floatformat:2 }}
+                </strong>
+            </div>
+
+            <div>
+                <p>Expenses this month</p>
+                <strong class="expense-text">
+                    ₹{{ monthly_expenses|floatformat:2 }}
+                </strong>
+            </div>
+
+            <div>
+                <p>Net this month</p>
+                <strong>
+                    ₹{{ monthly_balance|floatformat:2 }}
+                </strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- Monthly budget overview -->
+    <section class="budget-dashboard-card">
+        <div class="budget-dashboard-heading">
+            <div>
+                <p class="eyebrow">MONTHLY SPENDING LIMIT</p>
+                <h2>{{ current_month }} budget</h2>
+            </div>
+
+            <a href="{% url 'budgets' %}"
+               class="budget-manage-link">
+                Manage budgets →
+            </a>
+        </div>
+
+        {% if current_budget %}
+            <div class="budget-dashboard-numbers">
+                <strong>
+                    ₹{{ budget_spent|floatformat:2 }}
+                </strong>
+                <span>
+                    of ₹{{ current_budget.limit|floatformat:2 }}
+                </span>
+            </div>
+
+            <div class="budget-progress"
+                 role="progressbar"
+                 aria-label="Current month budget usage"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-valuenow="{{ budget_progress }}">
+                <div
+                    class="budget-progress-fill {% if budget_status == 'Over budget' %}progress-over{% elif budget_status == 'Almost at limit' %}progress-warning{% endif %}"
+                    data-progress="{{ budget_progress }}">
+                </div>
+            </div>
+
+            {% if budget_status == "Over budget" %}
+                <p class="budget-alert alert-over">
+                    Budget exceeded by
+                    ₹{{ budget_exceeded|floatformat:2 }}.
+                    Review your spending.
+                </p>
+
+            {% elif budget_status == "Almost at limit" %}
+                <p class="budget-alert alert-warning">
+                    You've used {{ budget_percentage }}% of your budget.
+                    ₹{{ budget_remaining|floatformat:2 }} remains.
+                </p>
+
+            {% else %}
+                <p class="budget-alert alert-good">
+                    You're on track.
+                    ₹{{ budget_remaining|floatformat:2 }} remains
+                    for this month.
+                </p>
+            {% endif %}
+
+        {% else %}
+            <p class="budget-empty-message">
+                You haven't set a budget for {{ current_month }} yet.
+            </p>
+
+            <a href="{% url 'budgets' %}"
+               class="primary-button">
+                + Set monthly budget
+            </a>
+        {% endif %}
+    </section>
+
+    <!-- Recent transactions -->
+    <section class="recent-section">
+        <div class="section-title-row">
+            <h2>Recent transactions</h2>
+            <a href="{% url 'transaction_list' %}">
+                View all
+            </a>
+        </div>
+
+        {% if recent_transactions %}
+            <div class="table-wrapper">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transaction in recent_transactions %}
+                        <tr>
+                            <td>{{ transaction.date }}</td>
+                            <td>{{ transaction.category }}</td>
+                            <td>
+                                {{ transaction.get_transaction_type_display }}
+                            </td>
+                            <td>
+                                {% if transaction.transaction_type == "INCOME" %}
+                                    <span class="income-text">+</span>
+                                {% else %}
+                                    <span class="expense-text">−</span>
+                                {% endif %}
+                                ₹{{ transaction.amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>
+                No transactions yet. Add your first transaction
+                to get started.
+            </p>
+        {% endif %}
+    </section>
+
+</section>
+{% endblock %}

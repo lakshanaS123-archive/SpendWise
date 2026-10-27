@@ -1,0 +1,25 @@
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Django secrets and local settings
+.env
+.env.*
+!.env.example
+
+# Local database and private uploads
+db.sqlite3
+*.sqlite3
+media/
+
+# Generated static files
+staticfiles/
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db

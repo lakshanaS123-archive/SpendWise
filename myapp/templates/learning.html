@@ -1,0 +1,81 @@
+
+{% extends "base.html" %}
+
+{% block title %}Money Learning Centre | SpendWise{% endblock %}
+
+{% block content %}
+<section class="sw-page">
+    <div class="sw-heading">
+        <p class="eyebrow">LEARN AT YOUR OWN PACE</p>
+        <h1>Money learning centre</h1>
+        <p>
+            Simple financial lessons with written explanations,
+            illustrations, practical tips, and optional audio.
+        </p>
+    </div>
+
+    <div class="sw-learning-banner">
+        <div class="sw-illustration" aria-hidden="true">💡</div>
+        <div>
+            <h2>Small lessons. Better money habits.</h2>
+            <p>
+                Pick one topic, learn the basics, and try the practical
+                tip in your daily life.
+            </p>
+        </div>
+    </div>
+
+    <div class="sw-learning-grid">
+        {% for lesson in lessons %}
+            <article class="sw-lesson-card">
+                <div class="sw-lesson-art" aria-hidden="true">
+                    {{ lesson.icon }}
+                </div>
+
+                <div class="sw-lesson-meta">
+                    <span>LESSON {{ forloop.counter }}</span>
+                    <span>{{ lesson.duration }}</span>
+                </div>
+
+                <h2>{{ lesson.title }}</h2>
+                <p class="sw-muted">{{ lesson.summary }}</p>
+
+                <details class="sw-lesson-details">
+                    <summary>Read lesson</summary>
+                    <p>{{ lesson.content }}</p>
+                    <div class="sw-practical-tip">
+                        <strong>Try this:</strong>
+                        {{ lesson.tip }}
+                    </div>
+                </details>
+
+                <div class="sw-audio-controls">
+                    <button
+                        type="button"
+                        class="sw-button sw-audio-play"
+                        data-audio-text="{{ lesson.title }}. {{ lesson.content }} Practical tip: {{ lesson.tip }}"
+                        aria-label="Play audio lesson: {{ lesson.title }}"
+                    >
+                        ▶ Listen to lesson
+                    </button>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+
+    <div class="sw-audio-status" id="audioStatus"
+         role="status" aria-live="polite">
+        Audio is ready. Choose a lesson to listen.
+    </div>
+
+    <button type="button" class="sw-button sw-stop-audio"
+            id="stopAudio">
+        ■ Stop audio
+    </button>
+
+    <p class="sw-disclaimer">
+        Educational content only. Investment returns are not guaranteed.
+        Check official sources before making financial decisions.
+    </p>
+</section>
+{% endblock %}

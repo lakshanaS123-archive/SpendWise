@@ -1,0 +1,193 @@
+
+{% extends "base.html" %}
+
+{% block title %}Financial Insights | SpendWise{% endblock %}
+
+{% block content %}
+<section class="sw-page">
+    <div class="sw-heading">
+        <p class="eyebrow">UNDERSTAND YOUR MONEY</p>
+        <h1>Financial insights</h1>
+        <p>See your financial patterns and make more informed decisions.</p>
+    </div>
+
+    <div class="sw-stats-grid">
+        <article class="sw-stat">
+            <span>Total income</span>
+            <h2 class="sw-green">₹{{ total_income|floatformat:2 }}</h2>
+        </article>
+        <article class="sw-stat">
+            <span>Total expenses</span>
+            <h2 class="sw-red">₹{{ total_expenses|floatformat:2 }}</h2>
+        </article>
+        <article class="sw-stat">
+            <span>Net balance</span>
+            <h2>₹{{ net_balance|floatformat:2 }}</h2>
+        </article>
+    </div>
+
+    <div class="sw-chart-grid">
+        <article class="sw-panel">
+            <h2>Income vs expenses</h2>
+            <p class="sw-muted">Your last six calendar months</p>
+            <div class="sw-chart-area">
+                <canvas id="monthlyChart"
+                        role="img"
+                        aria-label="Monthly income and expense chart"></canvas>
+            </div>
+            <p id="monthlyChartEmpty" class="sw-muted" hidden>
+                Add transactions to see your monthly chart.
+            </p>
+        </article>
+
+        <article class="sw-panel">
+            <h2>Where your money goes</h2>
+            <p class="sw-muted">Expenses grouped by category</p>
+            <div class="sw-chart-area sw-doughnut-area">
+                <canvas id="categoryChart"
+                        role="img"
+                        aria-label="Expenses by category chart"></canvas>
+            </div>
+            <p id="categoryChartEmpty" class="sw-muted" hidden>
+                Add expense transactions to see category insights.
+            </p>
+        </article>
+    </div>
+
+    <article class="sw-panel sw-insight-note">
+        <h2>Make your next decision count</h2>
+        <p>
+            Compare your spending with your monthly budget, review
+            recurring costs, and choose one realistic improvement.
+            A high expense category is not automatically a problem;
+            consider your needs and priorities.
+        </p>
+        <a href="{% url 'budgets' %}" class="sw-button">
+            Review my budgets
+        </a>
+    </article>
+</section>
+
+{{ month_labels|json_script:"sw-month-labels" }}
+{{ monthly_income_values|json_script:"sw-income-values" }}
+{{ monthly_expense_values|json_script:"sw-expense-values" }}
+{{ category_labels|json_script:"sw-category-labels" }}
+{{ category_values|json_script:"sw-category-values" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function readJSON(id) {
+        const element = document.getElementById(id);
+        return element ? JSON.parse(element.textContent) : [];
+    }
+
+    const months = readJSON("sw-month-labels");
+    const income = readJSON("sw-income-values");
+    const expenses = readJSON("sw-expense-values");
+    const categories = readJSON("sw-category-labels");
+    const categoryValues = readJSON("sw-category-values");
+
+    const monthlyCanvas = document.getElementById("monthlyChart");
+    const categoryCanvas = document.getElementById("categoryChart");
+
+    if (typeof Chart === "undefined") {
+        if (monthlyCanvas) {
+            monthlyCanvas.insertAdjacentHTML(
+                "afterend",
+                "<p>Charts could not load. Check your internet connection and refresh.</p>"
+            );
+        }
+        if (categoryCanvas) categoryCanvas.hidden = true;
+        return;
+    }
+
+    if (monthlyCanvas && months.length) {
+        const hasMonthlyData = income.concat(expenses).some(
+            value => Number(value) > 0
+        );
+        document.getElementById("monthlyChartEmpty").hidden = hasMonthlyData;
+
+        new Chart(monthlyCanvas, {
+            type: "bar",
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: "Income (₹)",
+                        data: income,
+                        backgroundColor: "#22a06b",
+                        borderRadius: 5
+                    },
+                    {
+                        label: "Expenses (₹)",
+                        data: expenses,
+                        backgroundColor: "#e35d6a",
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => "₹" + value
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (categoryCanvas) {
+        const hasCategoryData = categoryValues.some(
+            value => Number(value) > 0
+        );
+
+        document.getElementById("categoryChartEmpty").hidden =
+            hasCategoryData;
+        categoryCanvas.hidden = !hasCategoryData;
+
+        if (hasCategoryData) {
+            new Chart(categoryCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: categoryValues,
+                        backgroundColor: [
+                            "#4776e6", "#22a06b", "#e5a323",
+                            "#e35d6a", "#8b6bd6", "#3aa6b9",
+                            "#ed8a3b", "#64748b", "#c45b9b"
+                        ],
+                        borderWidth: 2,
+                        borderColor: "#ffffff"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ": ₹" +
+                                        Number(context.raw).toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
