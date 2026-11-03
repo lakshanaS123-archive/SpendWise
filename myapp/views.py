@@ -956,6 +956,14 @@ def health_check(request):
     # 3. Third-party API Cache Check
     exchange_info = ExchangeRateService.get_exchange_rates()
 
+    # 4. Media Storage Check
+    from django.conf import settings as django_settings
+    is_cloudinary = getattr(django_settings, "USE_CLOUDINARY", False)
+    media_info = {
+        "provider": "Cloudinary" if is_cloudinary else "Local / Disk Storage",
+        "persistent": is_cloudinary,
+    }
+
     response_data = {
         "status": overall_status,
         "application": "SpendWise",
@@ -965,6 +973,7 @@ def health_check(request):
             "engine": sql_engine,
         },
         "mongodb": mongo_health,
+        "media_storage": media_info,
         "third_party_api": {
             "provider": exchange_info.get("provider"),
             "status": "live" if exchange_info.get("is_live") else "cached_fallback",

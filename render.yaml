@@ -21,6 +21,14 @@ services:
           property: connectionString
       - key: MONGODB_DATABASE
         value: spendwise
+      - key: MONGODB_URI
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: EXCHANGE_RATE_API_URL
         value: https://open.er-api.com/v6/latest/USD
       - key: MEDIA_ROOT

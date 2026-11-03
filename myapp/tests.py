@@ -509,6 +509,25 @@ class NewFunctionalityTests(TestCase):
         self.assertEqual(data["database"]["status"], "connected")
         self.assertIn("mongodb", data)
         self.assertIn("third_party_api", data)
+        self.assertIn("media_storage", data)
+
+    # 9. Cloudinary Storage Configuration
+    def test_storage_configuration(self):
+        from django.conf import settings as s
+        self.assertIn("default", s.STORAGES)
+        self.assertIn("staticfiles", s.STORAGES)
+        self.assertIn("CLOUDINARY_STORAGE", dir(s))
+
+    # 10. Data Fixture Export Integrity
+    def test_initial_data_fixture_loads(self):
+        import json
+        with open("initial_data_backup.json", "r", encoding="utf-8") as f:
+            records = json.load(f)
+        self.assertGreaterEqual(len(records), 10)
+        models_in_fixture = {r["model"] for r in records}
+        self.assertIn("auth.user", models_in_fixture)
+        self.assertIn("myapp.transaction", models_in_fixture)
+        self.assertIn("myapp.budget", models_in_fixture)
 
     # 9. Custom 404 & 500 Pages
     def test_custom_404_page(self):

@@ -1,0 +1,134 @@
+[
+{
+  "model": "myapp.transaction",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "transaction_type": "INCOME",
+    "amount": "1.01",
+    "category": "Other",
+    "date": "2026-10-27",
+    "description": "money for food",
+    "receipt": "receipts/Customer_Discovery_2.png",
+    "created_at": "2026-10-27T04:16:50.532Z"
+  }
+},
+{
+  "model": "myapp.transaction",
+  "pk": 3,
+  "fields": {
+    "user": 2,
+    "transaction_type": "INCOME",
+    "amount": "4500.00",
+    "category": "Salary",
+    "date": "2026-10-27",
+    "description": "this week salary",
+    "receipt": "receipts/DSC_0995_YkWLJtC.jpg",
+    "created_at": "2026-10-27T04:50:42.685Z"
+  }
+},
+{
+  "model": "myapp.transaction",
+  "pk": 4,
+  "fields": {
+    "user": 2,
+    "transaction_type": "INCOME",
+    "amount": "6000.00",
+    "category": "Salary",
+    "date": "2026-10-27",
+    "description": "this week salary",
+    "receipt": "receipts/DSC_0995_uJ6l9If.jpg",
+    "created_at": "2026-10-27T10:43:38.997Z"
+  }
+},
+{
+  "model": "myapp.transaction",
+  "pk": 6,
+  "fields": {
+    "user": 2,
+    "transaction_type": "EXPENSE",
+    "amount": "650.00",
+    "category": "Bills",
+    "date": "2026-10-27",
+    "description": "chilld",
+    "receipt": "receipts/c6.jpeg",
+    "created_at": "2026-10-27T18:46:21.456Z"
+  }
+},
+{
+  "model": "myapp.budget",
+  "pk": 1,
+  "fields": {
+    "user": 2,
+    "month": 2,
+    "year": 2028,
+    "limit": "5000000.00"
+  }
+},
+{
+  "model": "myapp.budget",
+  "pk": 2,
+  "fields": {
+    "user": 2,
+    "month": 10,
+    "year": 2026,
+    "limit": "700000.00"
+  }
+},
+{
+  "model": "myapp.budget",
+  "pk": 3,
+  "fields": {
+    "user": 2,
+    "month": 11,
+    "year": 2026,
+    "limit": "76000.00"
+  }
+},
+{
+  "model": "myapp.budget",
+  "pk": 4,
+  "fields": {
+    "user": 1,
+    "month": 10,
+    "year": 2026,
+    "limit": "43000.00"
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$cqv5FZ4fNgHFhQ68NjC49o$HlPlXTnQrIkHggeT5jjtDUkXuoZRbSIiMR/AFkkifRY=",
+    "last_login": "2026-11-03T09:45:06.239Z",
+    "is_superuser": true,
+    "username": "lakshana",
+    "first_name": "",
+    "last_name": "",
+    "email": "frozenlakshana@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-26T06:50:46.157Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$4DBhAUK0ZiPgkt7yrui4wU$MnL3u24/1FtqnN4Zo+OLO1223is1oeuXZ9obGPj37FQ=",
+    "last_login": "2026-10-27T18:56:02.199Z",
+    "is_superuser": false,
+    "username": "Lakshana_S",
+    "first_name": "",
+    "last_name": "",
+    "email": "frozenlakshana@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-27T04:28:41.535Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]
