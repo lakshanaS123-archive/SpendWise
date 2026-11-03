@@ -1,0 +1,683 @@
+{% load static %}
+<!-- SPENDWISE GLOBAL CHAT ASSISTANT WIDGET -->
+<div id="spendwiseAssistantRoot">
+    <!-- Floating Launcher Button -->
+    <button
+        type="button"
+        id="assistantLauncherBtn"
+        aria-label="Open SpendWise Chat Assistant"
+        title="Open SpendWise Assistant"
+    >
+        <span class="launcher-icon">💬</span>
+        <span class="launcher-text">Ask Assistant</span>
+    </button>
+
+    <!-- Floating Chat Window -->
+    <div id="assistantChatWindow" role="dialog" aria-modal="true" aria-label="SpendWise Chat Assistant" style="display: none;">
+        <!-- Header -->
+        <div class="assistant-header">
+            <div class="assistant-title-wrap">
+                <div class="assistant-avatar">🤖</div>
+                <div>
+                    <h3 class="assistant-name">SpendWise Assistant</h3>
+                    <div class="assistant-status">
+                        <span class="status-dot"></span>
+                        <span id="assistantStatusText">Online &bull; SQL Source of Truth</span>
+                    </div>
+                </div>
+            </div>
+            <div class="assistant-header-actions">
+                <button type="button" id="assistantFeedbackBtn" title="Rate this conversation" aria-label="Give feedback">⭐</button>
+                <button type="button" id="assistantMinimizeBtn" title="Minimize chat" aria-label="Minimize chat">&times;</button>
+            </div>
+        </div>
+
+        <!-- Feedback Drawer (Collapsible) -->
+        <div id="assistantFeedbackDrawer" style="display: none;">
+            <div class="feedback-inner">
+                <div class="feedback-header">
+                    <h4>Rate Your Experience</h4>
+                    <button type="button" id="closeFeedbackDrawerBtn">&times;</button>
+                </div>
+                <p class="feedback-sub">Your feedback is saved directly to our MongoDB analytics collection.</p>
+                <div class="star-rating" id="starRatingContainer">
+                    <span class="star" data-rating="1">&#9733;</span>
+                    <span class="star" data-rating="2">&#9733;</span>
+                    <span class="star" data-rating="3">&#9733;</span>
+                    <span class="star" data-rating="4">&#9733;</span>
+                    <span class="star" data-rating="5">&#9733;</span>
+                </div>
+                <textarea id="feedbackTextInput" placeholder="Any suggestions or comments (optional)..." rows="2"></textarea>
+                <button type="button" id="submitFeedbackBtn">Submit Feedback</button>
+                <div id="feedbackResultMsg"></div>
+            </div>
+        </div>
+
+        <!-- Suggestion Chips -->
+        <div class="assistant-quick-chips" id="assistantQuickChips">
+            <button type="button" class="chip-btn" data-query="How do I record an expense?">Record Expense</button>
+            <button type="button" class="chip-btn" data-query="How do I create a monthly budget?">Monthly Budget</button>
+            <button type="button" class="chip-btn" data-query="Explain error SW-FORM-001">Error SW-FORM-001</button>
+            <button type="button" class="chip-btn" data-query="I want to raise a support ticket">Raise Ticket</button>
+        </div>
+
+        <!-- Message Body -->
+        <div class="assistant-messages" id="assistantMessagesList" tabindex="0">
+            <!-- Messages inserted here via JavaScript -->
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="assistant-typing" id="assistantTypingIndicator" style="display: none;">
+            <div class="typing-bubble">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="typing-text">Assistant is retrieving answer...</span>
+        </div>
+
+        <!-- Footer Input Area -->
+        <div class="assistant-footer">
+            <form id="assistantChatForm">
+                <input
+                    type="text"
+                    id="assistantChatInput"
+                    placeholder="Ask a question or enter an error code..."
+                    autocomplete="off"
+                    maxlength="1000"
+                    aria-label="Type your message"
+                >
+                <button type="submit" id="assistantSendBtn" aria-label="Send message">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+            <div class="assistant-footnote">
+                Answers verified from SQL database &bull; Conversations saved in MongoDB
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chat Assistant Widget Styles */
+#assistantLauncherBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9998;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(71, 118, 230, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#assistantLauncherBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(71, 118, 230, 0.5);
+}
+#assistantLauncherBtn .launcher-icon {
+    font-size: 18px;
+}
+
+#assistantChatWindow {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 540px;
+    max-height: calc(100vh - 120px);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
+    overflow: hidden;
+    animation: swFadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes swFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.assistant-header {
+    background: linear-gradient(135deg, #4776e6 0%, #6c5ce7 100%);
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.assistant-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.assistant-avatar {
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+.assistant-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+.assistant-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+.status-dot {
+    width: 7px;
+    height: 7px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+}
+.assistant-header-actions button {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    margin-left: 4px;
+}
+.assistant-header-actions button:hover {
+    background: rgba(255,255,255,0.32);
+}
+
+#assistantFeedbackDrawer {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 18px;
+    font-size: 13px;
+}
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.feedback-header h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+.feedback-header button {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+.feedback-sub {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+.star-rating {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.star-rating .star {
+    font-size: 20px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.star-rating .star.selected,
+.star-rating .star:hover {
+    color: #f59e0b;
+}
+#feedbackTextInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    font-size: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-family: inherit;
+    resize: none;
+    margin-bottom: 6px;
+}
+#submitFeedbackBtn {
+    padding: 6px 14px;
+    background: #4776e6;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assistant-quick-chips {
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+.assistant-quick-chips::-webkit-scrollbar {
+    display: none;
+}
+.chip-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11.5px;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.chip-btn:hover {
+    border-color: #4776e6;
+    color: #4776e6;
+    background: #eff6ff;
+}
+
+.assistant-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #ffffff;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.chat-bubble.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #4776e6 0%, #5b68df 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+.chat-bubble.assistant {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: #1e293b;
+    border-bottom-left-radius: 4px;
+}
+.chat-timestamp {
+    display: block;
+    font-size: 10px;
+    margin-top: 4px;
+    opacity: 0.7;
+    text-align: right;
+}
+.chat-bubble.assistant .chat-timestamp {
+    text-align: left;
+    color: #64748b;
+}
+
+.assistant-typing {
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #64748b;
+    background: #ffffff;
+}
+.typing-bubble {
+    display: flex;
+    gap: 3px;
+}
+.typing-bubble span {
+    width: 5px;
+    height: 5px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: typingBlink 1.4s infinite both;
+}
+.typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+.typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBlink {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1.1); }
+}
+
+.assistant-footer {
+    padding: 10px 14px 8px 14px;
+    border-top: 1px solid #e2e8f0;
+    background: #ffffff;
+}
+.assistant-footer form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+#assistantChatInput {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    font-size: 13.5px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+#assistantChatInput:focus {
+    border-color: #4776e6;
+}
+#assistantSendBtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #4776e6;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+#assistantSendBtn:hover {
+    background: #3b60c4;
+}
+.assistant-footnote {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 6px;
+}
+
+@media (max-width: 480px) {
+    #assistantChatWindow {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const launcherBtn = document.getElementById("assistantLauncherBtn");
+    const chatWindow = document.getElementById("assistantChatWindow");
+    const minimizeBtn = document.getElementById("assistantMinimizeBtn");
+    const feedbackToggleBtn = document.getElementById("assistantFeedbackBtn");
+    const feedbackDrawer = document.getElementById("assistantFeedbackDrawer");
+    const closeFeedbackDrawerBtn = document.getElementById("closeFeedbackDrawerBtn");
+    const chatForm = document.getElementById("assistantChatForm");
+    const chatInput = document.getElementById("assistantChatInput");
+    const messagesList = document.getElementById("assistantMessagesList");
+    const typingIndicator = document.getElementById("assistantTypingIndicator");
+    const quickChips = document.querySelectorAll(".chip-btn");
+    const stars = document.querySelectorAll("#starRatingContainer .star");
+    const submitFeedbackBtn = document.getElementById("submitFeedbackBtn");
+    const feedbackTextInput = document.getElementById("feedbackTextInput");
+    const feedbackResultMsg = document.getElementById("feedbackResultMsg");
+
+    let currentRating = 5;
+    let conversationId = localStorage.getItem("spendwise_conversation_id");
+    if (!conversationId) {
+        conversationId = "conv_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+        localStorage.setItem("spendwise_conversation_id", conversationId);
+    }
+
+    // Helper: format time
+    function getNowTimeString() {
+        const d = new Date();
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Helper: parse markdown bold, links, code
+    function formatMessageText(text) {
+        if (!text) return "";
+        let formatted = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Format Markdown code `code`
+        formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-family:monospace;font-size:12px;">$1</code>');
+        // Format Markdown bold **text**
+        formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        // Format Markdown links [text](url)
+        formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#4776e6;text-decoration:underline;">$1</a>');
+        // Format linebreaks
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        return formatted;
+    }
+
+    function appendMessage(role, text, timeStr) {
+        const bubble = document.createElement("div");
+        bubble.className = `chat-bubble ${role}`;
+        bubble.innerHTML = `
+            <div class="chat-content">${formatMessageText(text)}</div>
+            <span class="chat-timestamp">${timeStr || getNowTimeString()}</span>
+        `;
+        messagesList.appendChild(bubble);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    // Load initial greeting
+    if (messagesList.children.length === 0) {
+        appendMessage(
+            "assistant",
+            "Hello! I am your **SpendWise Assistant**.\n\nYou can ask me questions about managing transactions, setting budgets, or enter an error code (such as `SW-FORM-001`) for immediate solutions."
+        );
+    }
+
+    // Toggle chat window open / close
+    function toggleChat(show) {
+        chatWindow.style.display = show ? "flex" : "none";
+        if (show) {
+            chatInput.focus();
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+    }
+
+    launcherBtn.addEventListener("click", () => toggleChat(true));
+    minimizeBtn.addEventListener("click", () => toggleChat(false));
+
+    // Global API exposed for other buttons (e.g. from 404, 500, FAQ pages)
+    window.SpendWiseAssistant = {
+        open: function (prefillMessage) {
+            toggleChat(true);
+            if (prefillMessage) {
+                chatInput.value = prefillMessage;
+                chatInput.focus();
+            }
+        }
+    };
+
+    // Quick chips click
+    quickChips.forEach(chip => {
+        chip.addEventListener("click", function () {
+            const query = this.dataset.query;
+            if (query) {
+                chatInput.value = query;
+                sendMessage();
+            }
+        });
+    });
+
+    // Send message to /api/chat/
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        appendMessage("user", text);
+        chatInput.value = "";
+        typingIndicator.style.display = "flex";
+        messagesList.scrollTop = messagesList.scrollHeight;
+
+        fetch("/api/chat/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCsrfToken(),
+            },
+            body: JSON.stringify({
+                message: text,
+                conversation_id: conversationId,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            typingIndicator.style.display = "none";
+            if (data.reply) {
+                appendMessage("assistant", data.reply);
+            } else if (data.error) {
+                appendMessage("assistant", "⚠️ " + data.error);
+            }
+        })
+        .catch(err => {
+            typingIndicator.style.display = "none";
+            appendMessage(
+                "assistant",
+                "⚠️ Network connection issue. Unable to contact the SpendWise Assistant service right now."
+            );
+            console.error("Chat error:", err);
+        });
+    }
+
+    chatForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        sendMessage();
+    });
+
+    // Feedback handling
+    feedbackToggleBtn.addEventListener("click", () => {
+        const isShown = feedbackDrawer.style.display === "block";
+        feedbackDrawer.style.display = isShown ? "none" : "block";
+    });
+    closeFeedbackDrawerBtn.addEventListener("click", () => {
+        feedbackDrawer.style.display = "none";
+    });
+
+    // Star rating
+    function highlightStars(rating) {
+        stars.forEach(s => {
+            if (parseInt(s.dataset.rating) <= rating) {
+                s.classList.add("selected");
+            } else {
+                s.classList.remove("selected");
+            }
+        });
+    }
+    highlightStars(5);
+
+    stars.forEach(s => {
+        s.addEventListener("click", function () {
+            currentRating = parseInt(this.dataset.rating);
+            highlightStars(currentRating);
+        });
+    });
+
+    submitFeedbackBtn.addEventListener("click", function () {
+        submitFeedbackBtn.disabled = true;
+        submitFeedbackBtn.textContent = "Saving...";
+
+        fetch("/api/chat/feedback/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCsrfToken(),
+            },
+            body: JSON.stringify({
+                conversation_id: conversationId,
+                rating: currentRating,
+                feedback_text: feedbackTextInput.value.trim(),
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitFeedbackBtn.disabled = false;
+            submitFeedbackBtn.textContent = "Submit Feedback";
+            if (data.status === "success") {
+                feedbackResultMsg.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Feedback recorded in MongoDB!</span>';
+                setTimeout(() => {
+                    feedbackDrawer.style.display = "none";
+                    feedbackResultMsg.innerHTML = "";
+                    feedbackTextInput.value = "";
+                }, 2000);
+            } else {
+                feedbackResultMsg.innerHTML = '<span style="color:#ea580c;">Feedback recorded locally.</span>';
+            }
+        })
+        .catch(() => {
+            submitFeedbackBtn.disabled = false;
+            submitFeedbackBtn.textContent = "Submit Feedback";
+            feedbackResultMsg.innerHTML = '<span style="color:#ea580c;">Feedback noted.</span>';
+        });
+    });
+
+    // Helper: CSRF cookie
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue || "";
+    }
+});
+</script>

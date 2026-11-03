@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Open Support Ticket | SpendWise{% endblock %}
+
+{% block content %}
+<section class="page-container" style="max-width: 680px; margin: 40px auto; padding: 0 20px;">
+    <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+        <div style="margin-bottom: 24px;">
+            <a href="{% url 'ticket_list' %}" style="color: #64748b; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 12px;">← Back to Tickets</a>
+            <h1 style="font-size: 24px; color: #1e293b; font-weight: 800;">Open a Support Ticket</h1>
+            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">
+                Describe the problem or question you have. Our team will review your inquiry and reply promptly.
+            </p>
+        </div>
+
+        <form method="post" novalidate style="display: flex; flex-direction: column; gap: 18px;">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_subject" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Subject *</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                <span style="color: #dc2626; font-size: 12px; display: block; margin-top: 4px;">{{ form.subject.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_description" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Detailed Description *</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <span style="color: #dc2626; font-size: 12px; display: block; margin-top: 4px;">{{ form.description.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label for="id_contact_email" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Contact Email</label>
+                    {{ form.contact_email }}
+                </div>
+                <div>
+                    <label for="id_related_error_code" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Related Error Code (Optional)</label>
+                    {{ form.related_error_code }}
+                </div>
+            </div>
+
+            <div>
+                <label for="id_priority" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Priority</label>
+                {{ form.priority }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+                <a href="{% url 'ticket_list' %}" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 6px; color: #475569; font-size: 14px; font-weight: 600; text-decoration: none;">Cancel</a>
+                <button type="submit" style="padding: 10px 22px; background: #4776e6; color: #ffffff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(71,118,230,0.3);">Submit Ticket</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+input[type="text"], input[type="email"], select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #4776e6;
+    box-shadow: 0 0 0 3px rgba(71,118,230,0.15);
+}
+</style>
+{% endblock %}

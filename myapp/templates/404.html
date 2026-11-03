@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 Page Not Found | SpendWise{% endblock %}
+
+{% block content %}
+<section style="min-height: 65vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div style="max-width: 580px; width: 100%; text-align: center; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 45px 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%; background: #eff6ff; color: #4776e6; font-size: 36px; margin-bottom: 20px;">
+            🔍
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <span style="font-family: monospace; font-size: 13px; font-weight: 700; background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px;">
+                Error: {{ error_code|default:"SW-DATA-001" }}
+            </span>
+        </div>
+
+        <h1 style="font-size: 28px; font-weight: 800; color: #1e293b; margin-bottom: 12px;">
+            {{ error_title|default:"Page Not Found" }}
+        </h1>
+
+        <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+            {{ error_message|default:"We couldn't locate the page or transaction record you requested. It might have been moved, removed, or the link may be incorrect." }}
+        </p>
+
+        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+            <a href="/" style="padding: 12px 24px; background: #4776e6; color: #ffffff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; box-shadow: 0 2px 8px rgba(71,118,230,0.3);">
+                Return to Home
+            </a>
+            <button
+                type="button"
+                onclick="window.SpendWiseAssistant && window.SpendWiseAssistant.open('I encountered error code {{ error_code|default:"SW-DATA-001" }}: Page Not Found. Can you explain why and how to fix it?')"
+                style="padding: 12px 24px; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;"
+            >
+                Ask Assistant about {{ error_code|default:"SW-DATA-001" }}
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Frequently Asked Questions | SpendWise{% endblock %}
+
+{% block content %}
+<section class="page-container" style="max-width: 960px; margin: 40px auto; padding: 0 20px;">
+    <div style="text-align: center; margin-bottom: 35px;">
+        <span style="display: inline-block; padding: 6px 14px; background: #eef2ff; color: #4776e6; border-radius: 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Help Center</span>
+        <h1 style="font-size: 32px; color: #1e293b; margin-bottom: 12px; font-weight: 800;">Frequently Asked Questions</h1>
+        <p style="color: #64748b; font-size: 16px; max-width: 600px; margin: 0 auto;">
+            Find instant answers to common questions about tracking income, managing student budgets, and using SpendWise features.
+        </p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <div style="position: relative; margin-bottom: 16px;">
+            <input
+                type="text"
+                id="faqSearchInput"
+                placeholder="Search questions or keywords (e.g. receipt, budget, delete)..."
+                style="width: 100%; padding: 14px 18px 14px 44px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s;"
+                aria-label="Search FAQs"
+            >
+            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;">🔍</span>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" id="categoryFilterContainer">
+            <span style="font-size: 13px; font-weight: 600; color: #475569; margin-right: 6px;">Filter by:</span>
+            <button type="button" class="faq-category-btn active" data-category="" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #4776e6; background: #4776e6; color: #ffffff; font-size: 13px; cursor: pointer; font-weight: 600;">All</button>
+            {% for cat in categories %}
+            <button type="button" class="faq-category-btn" data-category="{{ cat }}" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; font-size: 13px; cursor: pointer; font-weight: 500;">{{ cat }}</button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- FAQ Accordion Container -->
+    <div id="faqAccordionContainer" style="position: relative; min-height: 200px;">
+        <div id="faqLoadingState" style="text-align: center; padding: 40px 0;">
+            <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #4776e6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <p style="margin-top: 14px; color: #64748b; font-size: 14px;">Loading questions from database...</p>
+        </div>
+
+        <div id="faqEmptyState" style="display: none; text-align: center; padding: 40px 20px; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+            <p style="font-size: 36px; margin-bottom: 10px;">🤔</p>
+            <h3 style="color: #1e293b; font-size: 18px; margin-bottom: 6px;">No matching FAQs found</h3>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Try different keywords or ask our AI chat assistant for immediate assistance.</p>
+            <button type="button" onclick="window.SpendWiseAssistant && window.SpendWiseAssistant.open('I have a question: ' + document.getElementById('faqSearchInput').value)" style="padding: 10px 20px; background: #4776e6; color: #ffffff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Ask SpendWise Assistant</button>
+        </div>
+
+        <div id="faqErrorState" style="display: none; text-align: center; padding: 40px 20px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+            <p style="color: #ef4444; font-weight: 600; font-size: 16px; margin-bottom: 8px;">Unable to load FAQs from the API</p>
+            <p style="color: #7f1d1d; font-size: 13px; margin-bottom: 16px;">Please check your internet connection or try again.</p>
+            <button type="button" id="faqRetryBtn" style="padding: 8px 18px; background: #ef4444; color: #ffffff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Retry</button>
+        </div>
+
+        <div id="faqList" style="display: none; display: flex; flex-direction: column; gap: 12px;"></div>
+    </div>
+
+    <!-- Still need help card -->
+    <div style="margin-top: 45px; background: linear-gradient(135deg, #4776e6 0%, #8e54e9 100%); border-radius: 14px; padding: 30px; color: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Still have questions?</h3>
+            <p style="opacity: 0.9; font-size: 14px; max-width: 500px;">
+                Our intelligent Assistant is available 24/7 on every page, or you can submit a support ticket to our technical team.
+            </p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="button" onclick="window.SpendWiseAssistant && window.SpendWiseAssistant.open()" style="padding: 12px 22px; background: #ffffff; color: #4776e6; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Chat with Assistant</button>
+            <a href="{% url 'ticket_create' %}" style="padding: 12px 22px; background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; font-weight: 600; text-decoration: none;">Raise a Ticket</a>
+        </div>
+    </div>
+</section>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.faq-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+.faq-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.faq-question-btn {
+    width: 100%;
+    padding: 18px 20px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+.faq-question-btn:focus-visible {
+    outline: 2px solid #4776e6;
+    outline-offset: -2px;
+}
+.faq-badge {
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-right: 8px;
+}
+.faq-answer {
+    display: none;
+    padding: 0 20px 20px 20px;
+    color: #475569;
+    font-size: 14.5px;
+    line-height: 1.65;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 14px;
+}
+.faq-item.is-open .faq-answer {
+    display: block;
+}
+.faq-item.is-open .faq-icon {
+    transform: rotate(180deg);
+}
+.faq-icon {
+    font-size: 14px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const listEl = document.getElementById("faqList");
+    const loadingEl = document.getElementById("faqLoadingState");
+    const emptyEl = document.getElementById("faqEmptyState");
+    const errorEl = document.getElementById("faqErrorState");
+    const searchInput = document.getElementById("faqSearchInput");
+    const retryBtn = document.getElementById("faqRetryBtn");
+    const categoryBtns = document.querySelectorAll(".faq-category-btn");
+
+    let currentCategory = "";
+    let currentSearch = "";
+    let searchDebounceTimer = null;
+
+    function fetchFAQs() {
+        loadingEl.style.display = "block";
+        listEl.style.display = "none";
+        emptyEl.style.display = "none";
+        errorEl.style.display = "none";
+
+        let url = `/api/faqs/?category=${encodeURIComponent(currentCategory)}&q=${encodeURIComponent(currentSearch)}`;
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then(data => {
+                loadingEl.style.display = "none";
+                if (!data.faqs || data.faqs.length === 0) {
+                    emptyEl.style.display = "block";
+                    return;
+                }
+
+                listEl.innerHTML = "";
+                data.faqs.forEach(faq => {
+                    const item = document.createElement("div");
+                    item.className = "faq-item";
+                    item.innerHTML = `
+                        <button type="button" class="faq-question-btn" aria-expanded="false">
+                            <span>
+                                <span class="faq-badge">${faq.category}</span>
+                                ${faq.question}
+                            </span>
+                            <span class="faq-icon">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            ${faq.answer}
+                        </div>
+                    `;
+
+                    const btn = item.querySelector(".faq-question-btn");
+                    btn.addEventListener("click", () => {
+                        const isOpen = item.classList.toggle("is-open");
+                        btn.setAttribute("aria-expanded", String(isOpen));
+                    });
+
+                    listEl.appendChild(item);
+                });
+
+                listEl.style.display = "flex";
+            })
+            .catch(err => {
+                loadingEl.style.display = "none";
+                errorEl.style.display = "block";
+                console.error("Failed to load FAQs:", err);
+            });
+    }
+
+    // Category button clicks
+    categoryBtns.forEach(btn => {
+        btn.addEventListener("click", function () {
+            categoryBtns.forEach(b => {
+                b.style.background = "#f8fafc";
+                b.style.color = "#475569";
+                b.style.borderColor = "#e2e8f0";
+                b.classList.remove("active");
+            });
+            this.style.background = "#4776e6";
+            this.style.color = "#ffffff";
+            this.style.borderColor = "#4776e6";
+            this.classList.add("active");
+
+            currentCategory = this.dataset.category || "";
+            fetchFAQs();
+        });
+    });
+
+    // Search input debounced
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                currentSearch = searchInput.value.trim();
+                fetchFAQs();
+            }, 300);
+        });
+    }
+
+    if (retryBtn) {
+        retryBtn.addEventListener("click", fetchFAQs);
+    }
+
+    // Initial fetch
+    fetchFAQs();
+});
+</script>
+{% endblock %}

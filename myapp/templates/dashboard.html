@@ -191,5 +191,114 @@
         {% endif %}
     </section>
 
+    <!-- Currency Exchange Rate Widget (Requirement 9) -->
+    <section class="exchange-rate-section" style="margin-top: 35px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div>
+                <h2 style="font-size: 18px; color: #1e293b; font-weight: 700;">Global Currency Rates &amp; Converter</h2>
+                <p style="color: #64748b; font-size: 13px;" id="exchangeRateSubtext">Connecting to third-party exchange provider...</p>
+            </div>
+            <span id="exchangeRateBadge" style="padding: 4px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 600; background: #e0f2fe; color: #0284c7;">Checking Provider</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px;" id="ratesGrid">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center;">
+                <span style="font-size: 12px; color: #64748b;">USD / INR</span>
+                <p style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 4px 0;" id="rateUsdInr">&#8377;--</p>
+                <span style="font-size: 11px; color: #94a3b8;">1 USD</span>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center;">
+                <span style="font-size: 12px; color: #64748b;">EUR / INR</span>
+                <p style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 4px 0;" id="rateEurInr">&#8377;--</p>
+                <span style="font-size: 11px; color: #94a3b8;">1 EUR</span>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center;">
+                <span style="font-size: 12px; color: #64748b;">GBP / INR</span>
+                <p style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 4px 0;" id="rateGbpInr">&#8377;--</p>
+                <span style="font-size: 11px; color: #94a3b8;">1 GBP</span>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center;">
+                <span style="font-size: 12px; color: #64748b;">AED / INR</span>
+                <p style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 4px 0;" id="rateAedInr">&#8377;--</p>
+                <span style="font-size: 11px; color: #94a3b8;">1 AED</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #f1f5f9; padding: 12px 16px; border-radius: 8px;">
+            <label for="converterInrInput" style="font-size: 13px; font-weight: 600; color: #334155;">Quick Convert &#8377;:</label>
+            <input type="number" id="converterInrInput" value="1000" min="1" step="10" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 110px;">
+            <span style="font-size: 13px; color: #475569;" id="convertedResult">&asymp; $-- USD &bull; &euro;-- EUR</span>
+        </div>
+    </section>
+
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const subtext = document.getElementById("exchangeRateSubtext");
+    const badge = document.getElementById("exchangeRateBadge");
+    const rateUsdInr = document.getElementById("rateUsdInr");
+    const rateEurInr = document.getElementById("rateEurInr");
+    const rateGbpInr = document.getElementById("rateGbpInr");
+    const rateAedInr = document.getElementById("rateAedInr");
+    const inrInput = document.getElementById("converterInrInput");
+    const convResult = document.getElementById("convertedResult");
+
+    let usdPerInr = 0.0117;
+    let inrPerUsd = 85.50;
+    let inrPerEur = 93.00;
+
+    fetch("/api/exchange-rates/")
+        .then(res => res.json())
+        .then(data => {
+            const rates = data.rates || {};
+            const inrRate = rates["INR"] || 85.50;
+            const eurRate = rates["EUR"] || 0.92;
+            const gbpRate = rates["GBP"] || 0.79;
+            const aedRate = rates["AED"] || 3.67;
+
+            inrPerUsd = inrRate;
+            inrPerEur = inrRate / eurRate;
+            usdPerInr = 1 / inrRate;
+
+            rateUsdInr.textContent = "₹" + inrRate.toFixed(2);
+            rateEurInr.textContent = "₹" + (inrRate / eurRate).toFixed(2);
+            rateGbpInr.textContent = "₹" + (inrRate / gbpRate).toFixed(2);
+            rateAedInr.textContent = "₹" + (inrRate / aedRate).toFixed(2);
+
+            const source = data.provider || "open.er-api.com";
+            const updated = data.updated_at ? new Date(data.updated_at).toLocaleTimeString() : "Recent";
+            subtext.textContent = `Provider: ${source} • Updated: ${updated}`;
+
+            if (data.is_live) {
+                badge.textContent = "● Live Rates";
+                badge.style.background = "#dcfce7";
+                badge.style.color = "#15803d";
+            } else {
+                badge.textContent = "● Cached Fallback";
+                badge.style.background = "#fef3c7";
+                badge.style.color = "#b45309";
+            }
+
+            updateConversion();
+        })
+        .catch(err => {
+            badge.textContent = "● Fallback Active";
+            subtext.textContent = "Using cached fallback exchange values";
+            console.error("Exchange rate fetch error:", err);
+            updateConversion();
+        });
+
+    function updateConversion() {
+        const amount = parseFloat(inrInput.value) || 0;
+        const inUsd = (amount * usdPerInr).toFixed(2);
+        const inEur = (amount / inrPerEur).toFixed(2);
+        convResult.textContent = `≈ $${inUsd} USD • €${inEur} EUR`;
+    }
+
+    if (inrInput) {
+        inrInput.addEventListener("input", updateConversion);
+    }
+});
+</script>
 {% endblock %}

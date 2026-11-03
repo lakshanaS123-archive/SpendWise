@@ -1,24 +1,27 @@
-
 import os
 from pathlib import Path
-
+from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
-
-"""
-Django settings for myproject project.
-"""
+import dotenv
 
 # Build paths inside the project.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env if present
+dotenv.load_dotenv(BASE_DIR / ".env")
+
+# Debug setting
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
 # Security settings
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "local-only-development-key-do-not-use-in-production",
-)
-
-DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "local-only-development-key-do-not-use-in-production"
+    else:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY environment variable is required when DEBUG is False."
+        )
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -37,6 +40,12 @@ if render_hostname and render_hostname not in ALLOWED_HOSTS:
 CSRF_TRUSTED_ORIGINS = (
     [f"https://{render_hostname}"] if render_hostname else []
 )
+additional_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if additional_csrf:
+    for origin in additional_csrf.split(","):
+        origin_clean = origin.strip()
+        if origin_clean and origin_clean not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin_clean)
 
 
 # Application definition
@@ -54,6 +63,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "myapp.middleware.RequestLoggingMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -123,22 +133,23 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        if not DEBUG
+        else "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
 
 # Uploaded media files (e.g. transaction receipts)
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / "media"))
 
 
-# Email
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# Email configuration standardized using EMAIL_BACKEND
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
 
 
 # Authentication redirects
@@ -149,3 +160,30 @@ LOGOUT_REDIRECT_URL = "/"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# MongoDB configuration for Chat History and User Feedback
+MONGODB_URI = os.environ.get("MONGODB_URI", "")
+MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "spendwise")
+
+# Third-party Exchange Rate API configuration
+EXCHANGE_RATE_API_URL = os.environ.get(
+    "EXCHANGE_RATE_API_URL",
+    "https://open.er-api.com/v6/latest/USD",
+)
+EXCHANGE_RATE_API_KEY = os.environ.get("EXCHANGE_RATE_API_KEY", "")
+
+# Production Security Enhancements
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = (
+        os.environ.get("SECURE_SSL_REDIRECT", "False").lower() == "true"
+    )
+    SESSION_COOKIE_SECURE = (
+        os.environ.get("SESSION_COOKIE_SECURE", "True").lower() == "true"
+    )
+    CSRF_COOKIE_SECURE = (
+        os.environ.get("CSRF_COOKIE_SECURE", "True").lower() == "true"
+    )
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
