@@ -32,14 +32,20 @@ class MongoService:
     def _sanitize_uri(cls, uri: str) -> str:
         """
         Cleans and properly URL-encodes credentials in mongodb or mongodb+srv URI strings.
+        Handles passwords containing special characters (including '@' and ':').
         """
-        match = re.match(r"^(mongodb(?:\+srv)?://)([^:]+):([^@]+)@(.+)$", uri)
-        if match:
-            prefix, user, pwd, rest = match.groups()
-            safe_user = urllib.parse.quote_plus(urllib.parse.unquote(user))
-            safe_pwd = urllib.parse.quote_plus(urllib.parse.unquote(pwd))
-            return f"{prefix}{safe_user}:{safe_pwd}@{rest}"
-        return uri
+        if "://" not in uri:
+            return uri
+        scheme, remainder = uri.split("://", 1)
+        if "@" not in remainder:
+            return uri
+        userinfo, hostinfo = remainder.rsplit("@", 1)
+        if ":" not in userinfo:
+            return uri
+        username, password = userinfo.split(":", 1)
+        quoted_username = urllib.parse.quote_plus(urllib.parse.unquote(username))
+        quoted_password = urllib.parse.quote_plus(urllib.parse.unquote(password))
+        return f"{scheme}://{quoted_username}:{quoted_password}@{hostinfo}"
 
     @classmethod
     def get_client(cls):
