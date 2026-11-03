@@ -23,6 +23,7 @@ class MongoService:
     """
 
     _client: Optional[Any] = None
+    _indexes_ensured: bool = False
 
     @classmethod
     def get_client(cls):
@@ -51,13 +52,30 @@ class MongoService:
         return cls._client
 
     @classmethod
+    def ensure_indexes(cls, db):
+        """
+        Ensures optimal indexes exist for conversation lookup and feedback tracking.
+        """
+        try:
+            db.conversations.create_index([("conversation_id", 1)], unique=True)
+            db.conversations.create_index([("user_id", 1)])
+            db.feedback.create_index([("conversation_id", 1)])
+            db.feedback.create_index([("user_id", 1)])
+        except Exception as e:
+            logger.warning(f"Failed to create MongoDB indexes: {e}")
+
+    @classmethod
     def get_database(cls):
         client = cls.get_client()
         if client is None:
             return None
         db_name = getattr(settings, "MONGODB_DATABASE", "spendwise")
         try:
-            return client[db_name]
+            db = client[db_name]
+            if not cls._indexes_ensured:
+                cls.ensure_indexes(db)
+                cls._indexes_ensured = True
+            return db
         except Exception as e:
             logger.warning(f"Error accessing MongoDB database {db_name}: {e}")
             return None

@@ -27,7 +27,7 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
         "DJANGO_ALLOWED_HOSTS",
-        "127.0.0.1,localhost,testserver",
+        "127.0.0.1,localhost,testserver,.onrender.com",
     ).split(",")
     if host.strip()
 ]
@@ -37,9 +37,14 @@ render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
 
-CSRF_TRUSTED_ORIGINS = (
-    [f"https://{render_hostname}"] if render_hostname else []
-)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+]
+if render_hostname:
+    origin = f"https://{render_hostname}"
+    if origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(origin)
+
 additional_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 if additional_csrf:
     for origin in additional_csrf.split(","):
