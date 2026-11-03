@@ -1,4 +1,6 @@
 import logging
+import re
+import urllib.parse
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -24,6 +26,20 @@ class MongoService:
 
     _client: Optional[Any] = None
     _indexes_ensured: bool = False
+    _last_error: Optional[str] = None
+
+    @classmethod
+    def _sanitize_uri(cls, uri: str) -> str:
+        """
+        Cleans and properly URL-encodes credentials in mongodb or mongodb+srv URI strings.
+        """
+        match = re.match(r"^(mongodb(?:\+srv)?://)([^:]+):([^@]+)@(.+)$", uri)
+        if match:
+            prefix, user, pwd, rest = match.groups()
+            safe_user = urllib.parse.quote_plus(urllib.parse.unquote(user))
+            safe_pwd = urllib.parse.quote_plus(urllib.parse.unquote(pwd))
+            return f"{prefix}{safe_user}:{safe_pwd}@{rest}"
+        return uri
 
     @classmethod
     def get_client(cls):
@@ -31,22 +47,34 @@ class MongoService:
         Returns a cached or new MongoClient instance with a fast connection timeout.
         """
         if not PYMONGO_AVAILABLE:
+            cls._last_error = "pymongo library not installed"
             return None
 
-        uri = getattr(settings, "MONGODB_URI", "").strip()
-        if not uri:
+        raw_uri = getattr(settings, "MONGODB_URI", "")
+        if not raw_uri:
+            cls._last_error = "MONGODB_URI is not set"
             return None
+
+        uri = raw_uri.strip("'\" \t\r\n")
+        if not uri:
+            cls._last_error = "MONGODB_URI is empty"
+            return None
+
+        clean_uri = cls._sanitize_uri(uri)
 
         if cls._client is None:
             try:
                 # 3000ms server selection timeout to prevent blocking if MongoDB is unreachable
                 cls._client = MongoClient(
-                    uri,
+                    clean_uri,
                     serverSelectionTimeoutMS=3000,
                     connectTimeoutMS=3000,
                 )
+                cls._last_error = None
             except Exception as e:
-                logger.warning(f"Failed to initialize MongoClient: {e}")
+                sanitized_msg = re.sub(r":([^@]+)@", ":***@", str(e))
+                cls._last_error = sanitized_msg
+                logger.warning(f"Failed to initialize MongoClient: {sanitized_msg}")
                 return None
 
         return cls._client
@@ -92,7 +120,7 @@ class MongoService:
                 "connected": False,
             }
 
-        uri = getattr(settings, "MONGODB_URI", "").strip()
+        uri = getattr(settings, "MONGODB_URI", "").strip("'\" \t\r\n")
         if not uri:
             return {
                 "status": "unconfigured",
@@ -104,7 +132,7 @@ class MongoService:
         if client is None:
             return {
                 "status": "disconnected",
-                "reason": "Could not create MongoDB client",
+                "reason": cls._last_error or "Could not create MongoDB client",
                 "connected": False,
             }
 
@@ -116,10 +144,11 @@ class MongoService:
                 "connected": True,
             }
         except Exception as e:
-            logger.warning(f"MongoDB ping failed: {e}")
+            sanitized_msg = re.sub(r":([^@]+)@", ":***@", str(e))
+            logger.warning(f"MongoDB ping failed: {sanitized_msg}")
             return {
                 "status": "disconnected",
-                "reason": "Server connection failed or timed out",
+                "reason": f"Server connection failed or timed out: {sanitized_msg}",
                 "connected": False,
             }
 
