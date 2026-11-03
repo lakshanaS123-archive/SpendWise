@@ -60,9 +60,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "cloudinary_storage",
     "django.contrib.staticfiles",
     "cloudinary",
+    "cloudinary_storage",
     "myapp",
 ]
 
@@ -160,6 +160,10 @@ STORAGES = {
         else "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+
+# Compatibility aliases for third-party packages (e.g. django-cloudinary-storage)
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
 
 # Uploaded media files (e.g. transaction receipts)
