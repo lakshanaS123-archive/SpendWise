@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block title %}SpendWise | Student Finance Manager{% endblock %}
@@ -13,7 +12,11 @@
             Track your income, understand your spending, and manage
             your monthly budget — all in one place.
         </p>
-        <a href="#dashboard" class="primary-button">Explore SpendWise</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="primary-button">Go to Dashboard</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="primary-button">Get Started Free</a>
+        {% endif %}
     </div>
 
     <div class="balance-card">
@@ -31,7 +34,7 @@
                 <p class="expense-value">₹0.00</p>
             </div>
         </div>
-        <p class="demo-note">Sample preview · Not actual financial data</p>
+        <p class="demo-note">{% if user.is_authenticated %}Logged in as {{ user.username }}{% else %}Personal Student Financial Dashboard{% endif %}</p>
     </div>
 </section>
 
@@ -46,41 +49,46 @@
         <article class="feature-card">
             <div class="feature-icon">₹</div>
             <h3>Track Transactions</h3>
-            <p>Record your income and expenses in one organized place.</p>
+            <p>Record your income and expenses with receipt attachments and category filters.</p>
         </article>
 
         <article class="feature-card">
             <div class="feature-icon">◷</div>
             <h3>Manage Budgets</h3>
-            <p>Set spending limits and keep an eye on your monthly budget.</p>
+            <p>Set spending limits with visual indicators and progress alerts.</p>
         </article>
 
         <article class="feature-card">
             <div class="feature-icon">↗</div>
             <h3>Understand Spending</h3>
-            <p>Identify spending patterns and make more informed decisions.</p>
+            <p>Identify spending patterns and compare trends with interactive charts.</p>
         </article>
     </div>
 </section>
 
 <section class="dashboard-preview" id="dashboard">
-    <p class="eyebrow">YOUR NEXT STEP</p>
-    <h2>Your finances, organized.</h2>
+    <p class="eyebrow">READY TO TAKE CONTROL?</p>
+    <h2>Your finances, organized and secure.</h2>
     <p>
-        The transaction manager, budget tracker, and personal dashboard
-        will become interactive as we build the application.
+        SpendWise is fully equipped with income and expense tracking, permanent receipt uploads, 
+        monthly budget monitoring, Chart.js analytics, and a built-in Money Learning Centre.
     </p>
-    <button class="primary-button" id="demoButton" type="button">
-        Test the application
-    </button>
-    <p id="demoMessage" class="demo-message" aria-live="polite"></p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="primary-button">View Your Dashboard</a>
+            <a href="{% url 'transaction_list' %}" class="primary-button" style="background: #475569; text-decoration: none;">Manage Transactions</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="primary-button">Create Free Account</a>
+            <a href="{% url 'login' %}" class="primary-button" style="background: #475569; text-decoration: none;">Log In</a>
+        {% endif %}
+    </div>
 </section>
 
 <section class="about" id="about">
     <h2>Designed for student life.</h2>
     <p>
-        SpendWise is a student-focused finance management project
-        built with Python and Django.
+        SpendWise is a production-ready student finance application
+        built with Python, Django, PostgreSQL, and WhiteNoise.
     </p>
 </section>
 

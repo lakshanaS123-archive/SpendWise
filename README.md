@@ -10,7 +10,8 @@ SpendWise is a full-stack personal finance web application built with Django, Po
 - **Primary Domain:** Student Personal Finance & Financial Literacy
 - **Architecture:** Monolithic Django with RESTful JSON API endpoints, SQL persistence for transactional/relational data, and MongoDB for conversational chat history and feedback.
 - **Repository:** [https://github.com/lakshanaS123-archive/SpendWise](https://github.com/lakshanaS123-archive/SpendWise)
-- **Deployment Platform:** Render (Gunicorn, WhiteNoise, PostgreSQL, Persistent Storage)
+- **Deployment Platform:** Render (Gunicorn, WhiteNoise, PostgreSQL, Cloudinary Media Storage)
+- **Live Production URL:** [https://spendwise-i14t.onrender.com](https://spendwise-i14t.onrender.com)
 
 ---
 
@@ -79,7 +80,7 @@ DJANGO_APP/
 │   ├── middleware.py             # Structured RequestLoggingMiddleware
 │   ├── models.py                 # Transaction, Budget, FAQ, ErrorCode, SupportTicket
 │   ├── mongo_service.py          # MongoDB client for chat history and feedback
-│   ├── tests.py                  # Comprehensive test suite (30 passing tests)
+│   ├── tests.py                  # Comprehensive test suite (32 passing tests)
 │   ├── urls.py                   # Application routes & API endpoints
 │   ├── views.py                  # Core views, JSON APIs, and error handlers
 │   │
@@ -398,7 +399,7 @@ MEDIA_ROOT=media
 
 ## 15. Automated Testing
 
-Run the full automated test suite containing 30 test cases:
+Run the full automated test suite containing 32 test cases:
 
 ```bash
 python manage.py test
@@ -415,7 +416,8 @@ python manage.py test
 - Assistant intelligence for error code explanation, FAQ answering, and ticket creation.
 - Support ticket CRUD and role-based permissions (user vs. staff).
 - Third-party currency exchange rate retrieval, timeout handling, and cached fallback.
-- Health check endpoint verification.
+- Health check endpoint verification and diagnostic reporting.
+- Cloudinary media storage configuration and initial data fixture integrity.
 - Custom 404 and 500 error page handling.
 - Request logging middleware and `X-Request-ID` correlation tracking.
 
@@ -435,7 +437,9 @@ SpendWise is configured for seamless deployment on Render:
    - `DATABASE_URL`: Connection string of your Render PostgreSQL database.
    - `MONGODB_URI`: Connection string from your MongoDB Atlas cluster.
    - `MONGODB_DATABASE`: `spendwise`
-   - `RENDER_EXTERNAL_HOSTNAME`: Auto-provided by Render.
+   - `CLOUDINARY_CLOUD_NAME`: Cloud name from your Cloudinary dashboard.
+   - `CLOUDINARY_API_KEY`: API key from Cloudinary.
+   - `CLOUDINARY_API_SECRET`: API secret from Cloudinary.
    - `PYTHON_VERSION`: `3.13.5`
 3. **Build Script Execution (`build.sh`):**
    ```bash
@@ -443,9 +447,10 @@ SpendWise is configured for seamless deployment on Render:
    python manage.py collectstatic --no-input
    python manage.py migrate
    python manage.py seed_data
+   python manage.py load_initial_data
    ```
-4. **Persistent Media Storage:**
-   Attach a Render Persistent Disk mounted at `/var/data/media` and configure environment variable `MEDIA_ROOT=/var/data/media` so uploaded receipt attachments persist across deploys.
+4. **Permanent Cloud Media Storage:**
+   SpendWise integrates with Cloudinary (`django-cloudinary-storage`) so receipt image attachments are permanently persisted and served via high-performance CDN at zero hosting cost.
 
 ---
 

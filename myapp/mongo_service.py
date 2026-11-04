@@ -143,18 +143,24 @@ class MongoService:
             }
 
         try:
-            client.admin.command("ping")
+            db_name = getattr(settings, "MONGODB_DATABASE", "spendwise")
+            client[db_name].command("ping")
             return {
                 "status": "connected",
-                "database": getattr(settings, "MONGODB_DATABASE", "spendwise"),
+                "database": db_name,
                 "connected": True,
             }
         except Exception as e:
+            cls._client = None
             sanitized_msg = re.sub(r":([^@]+)@", ":***@", str(e))
             logger.warning(f"MongoDB ping failed: {sanitized_msg}")
+            if "authentication failed" in sanitized_msg or "code: 8000" in sanitized_msg or "code': 8000" in sanitized_msg:
+                reason = "MongoDB Atlas authentication failed (Error 8000: bad auth). Please verify that the database username and password in Render MONGODB_URI match your MongoDB Atlas Database Access user."
+            else:
+                reason = f"Server connection failed or timed out: {sanitized_msg}"
             return {
                 "status": "disconnected",
-                "reason": f"Server connection failed or timed out: {sanitized_msg}",
+                "reason": reason,
                 "connected": False,
             }
 
